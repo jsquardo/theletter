@@ -1,0 +1,16 @@
+[Unit]
+Description=The Letter Engine — Amnesiac/Myth Maker cycle runner
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/theletter/engine
+ExecStart=/usr/bin/python3 loop.py
+Restart=on-failure
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

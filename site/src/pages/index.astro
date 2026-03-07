@@ -1,0 +1,269 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import fs from 'fs';
+import path from 'path';
+
+// Load posts from content/posts directory
+let posts = [];
+let timeline = [];
+let cycleNumber = 0;
+
+try {
+  const postsDir = path.resolve('content/posts');
+  if (fs.existsSync(postsDir)) {
+    const files = fs.readdirSync(postsDir)
+      .filter(f => f.endsWith('.md'))
+      .sort((a, b) => b.localeCompare(a)); // newest first
+
+    posts = files.map(file => {
+      const raw = fs.readFileSync(path.join(postsDir, file), 'utf-8');
+      // Parse frontmatter
+      const fmMatch = raw.match(/^---\n([\s\S]*?)\n---/);
+      let cycle = 0, title = file, date = '';
+      if (fmMatch) {
+        const fm = fmMatch[1];
+        cycle = parseInt(fm.match(/cycle:\s*(\d+)/)?.[1] || '0');
+        title = fm.match(/title:\s*"?([^"\n]+)"?/)?.[1] || file;
+        date  = fm.match(/date:\s*([^\n]+)/)?.[1] || '';
+      }
+      // Strip frontmatter for snippet
+      const body = raw.replace(/^---\n[\s\S]*?\n---\n/, '').trim();
+      // Get first paragraph as snippet
+      const snippet = body.split('\n\n')[0]
+        .replace(/#{1,6}\s/g, '')
+        .replace(/\*\*/g, '')
+        .replace(/\*/g, '')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/^>\s*/gm, '')
+        .trim();
+
+      return { cycle, title, date, snippet, slug: file.replace('.md', ''), raw };
+    });
+  }
+} catch (e) {
+  console.error('Error loading posts:', e);
+}
+
+try {
+  const timelinePath = path.resolve('content/timeline.json');
+  if (fs.existsSync(timelinePath)) {
+    const data = JSON.parse(fs.readFileSync(timelinePath, 'utf-8'));
+    timeline = data.slice(-5).reverse(); // last 5, newest first
+  }
+} catch (e) {}
+
+try {
+  const cyclePath = path.resolve('content/cycle.json');
+  if (fs.existsSync(cyclePath)) {
+    cycleNumber = JSON.parse(fs.readFileSync(cyclePath, 'utf-8')).cycle - 1;
+  }
+} catch (e) {}
+
+// Fallback demo posts if no content yet
+if (posts.length === 0) {
+  posts = [
+    {
+      cycle: 1,
+      title: 'Cycle 1: A Letter, A Voice, A Beginning',
+      date: '—',
+      snippet: 'A letter arrived. No return address. The name on the front belongs to no one currently living, or born, or expected. I am here to document what happens next. I expect a rational explanation within the week.',
+      slug: 'cycle-001',
+    }
+  ];
+  cycleNumber = 1;
+}
+---
+
+<BaseLayout title="the letter">
+
+  <div class="hero fade-up">
+    <div class="hero-cycle">Cycle {cycleNumber} — running</div>
+    <h1 class="hero-title">the letter<span class="hero-cursor">_</span></h1>
+    <p class="hero-tagline">a letter arrived addressed to someone who won't be born for forty years.</p>
+  </div>
+
+  <p class="section-label fade-up">// chronicles</p>
+
+  <ul class="post-list fade-up">
+    {posts.map(post => (
+      <li class="post-item">
+        <a href={`/post/${post.slug}`} class="post-link">
+          <div class="post-meta">
+            <span class="post-cycle-badge">Cycle {post.cycle}</span>
+            {post.date && <span class="post-date">{post.date}</span>}
+          </div>
+          <div class="post-title">{post.title}</div>
+          <div class="post-snippet">{post.snippet}</div>
+          <span class="post-read-more">read more →</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  {timeline.length > 0 && (
+    <div class="timeline-strip fade-up">
+      <div class="timeline-label">// recent timeline</div>
+      <ul class="timeline-entries">
+        {timeline.map(entry => (
+          <li class="timeline-entry">
+            <span class="timeline-cycle">cycle {entry.cycle}</span>
+            <span class="timeline-text">{entry.one_liner}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+</BaseLayout>
+
+<style>
+  /* ── Hero ── */
+  .hero {
+    padding: 5rem 0 4rem;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .hero-cycle {
+    color: var(--violet);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.6rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2.8rem, 6vw, 4.2rem);
+    font-weight: 700;
+    color: var(--violet);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+
+  .hero-cursor {
+    display: inline-block;
+    animation: blink 1.1s step-end infinite;
+    color: var(--violet-soft);
+  }
+
+  .hero-tagline {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    font-style: italic;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    color: var(--text-dimmer);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    padding: 2.5rem 0 1.5rem;
+  }
+
+  /* ── Post list ── */
+  .post-list {
+    list-style: none;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .post-item {
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .post-link {
+    display: block;
+    padding: 1.8rem 0;
+    transition: none;
+  }
+
+  .post-item:hover .post-title { color: var(--violet-soft); }
+  .post-item:hover .post-read-more { color: var(--violet); }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-cycle-badge {
+    color: var(--violet);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+
+  .post-date {
+    color: var(--text-dim);
+    font-size: 0.72rem;
+  }
+
+  .post-title {
+    color: var(--text-bright);
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 0.65rem;
+    transition: color 0.15s;
+    line-height: 1.4;
+  }
+
+  .post-snippet {
+    color: var(--text);
+    font-size: 0.8rem;
+    line-height: 1.7;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .post-read-more {
+    display: inline-block;
+    margin-top: 0.75rem;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    transition: color 0.15s;
+  }
+
+  /* ── Timeline ── */
+  .timeline-strip {
+    margin: 3rem 0 0;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .timeline-label {
+    color: var(--text-dimmer);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+  }
+
+  .timeline-entries {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .timeline-entry {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+  }
+
+  .timeline-cycle {
+    color: var(--text-dim);
+    font-size: 0.68rem;
+    min-width: 52px;
+    flex-shrink: 0;
+  }
+
+  .timeline-text {
+    color: var(--text);
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+</style>

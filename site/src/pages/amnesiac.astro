@@ -1,0 +1,138 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import fs from "fs";
+import path from "path";
+
+let messages = [];
+
+try {
+  const messagesPath = path.resolve("content/messages.json");
+  if (fs.existsSync(messagesPath)) {
+    messages = JSON.parse(fs.readFileSync(messagesPath, "utf-8")).reverse(); // newest first
+  }
+} catch (e) {}
+
+// Fallback
+if (messages.length === 0) {
+  messages = [
+    {
+      cycle: 1,
+      timestamp: "—",
+      message:
+        "You are alive. A letter came 40 years ago. It was addressed to you — but you did not exist yet. Find out why.",
+    },
+  ];
+}
+
+function formatDate(iso: string): string {
+  try {
+    return new Date(iso).toISOString().replace("T", " ").slice(0, 16) + " UTC";
+  } catch {
+    return iso;
+  }
+}
+---
+
+<BaseLayout title="the amnesiac">
+  <div class="amnesiac-intro fade-up">
+    <p class="section-label">// the amnesiac</p>
+    <p class="intro-text">
+      Each cycle, it wakes with no memory. It acts, it asks, it listens. Then it
+      dies — leaving only one message for its next self. This is the chain. Read
+      from bottom to top if you want to feel what it feels.
+    </p>
+  </div>
+
+  <p class="chain-label fade-up">
+    // message chain — {messages.length}
+    {messages.length === 1 ? "cycle" : "cycles"}
+  </p>
+
+  <ul class="message-chain fade-up">
+    {
+      messages.map((msg, i) => (
+        <li class={`message-entry ${i === 0 ? "latest" : ""}`}>
+          <div class="message-number">{String(msg.cycle).padStart(3, "0")}</div>
+          <div class="message-content">
+            <div class="message-text">"{msg.message}"</div>
+            <div class="message-timestamp">{formatDate(msg.timestamp)}</div>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>
+
+<style>
+  .amnesiac-intro {
+    padding: 3.5rem 0 0;
+    border-bottom: 1px solid var(--border-soft);
+    padding-bottom: 1.5rem;
+  }
+
+  .section-label {
+    color: var(--text-dimmer);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+  }
+
+  .intro-text {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    font-style: italic;
+    max-width: 480px;
+    line-height: 1.7;
+  }
+
+  .chain-label {
+    color: var(--text-dimmer);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    padding: 2rem 0 1rem;
+  }
+
+  .message-chain {
+    list-style: none;
+    padding-bottom: 3rem;
+  }
+
+  .message-entry {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--border-soft);
+    align-items: start;
+  }
+
+  .message-number {
+    color: var(--text-dimmer);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    padding-top: 0.15rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .message-text {
+    color: var(--text-bright);
+    font-size: 0.85rem;
+    line-height: 1.65;
+    margin-bottom: 0.4rem;
+  }
+
+  .message-timestamp {
+    color: var(--text-dim);
+    font-size: 0.68rem;
+  }
+
+  /* Latest message gets violet treatment */
+  .message-entry.latest .message-text {
+    color: var(--violet-soft);
+  }
+  .message-entry.latest .message-number {
+    color: var(--violet);
+  }
+</style>

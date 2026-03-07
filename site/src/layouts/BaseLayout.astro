@@ -1,0 +1,151 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = 'the letter', description = 'A letter arrived addressed to someone who won\'t be born for forty years.' } = Astro.props;
+
+// Read cycle number from content
+let cycleNumber = 1;
+try {
+  const fs = await import('fs');
+  const path = await import('path');
+  const cyclePath = path.resolve('content/cycle.json');
+  if (fs.existsSync(cyclePath)) {
+    const data = JSON.parse(fs.readFileSync(cyclePath, 'utf-8'));
+    cycleNumber = data.cycle - 1; // last completed cycle
+  }
+} catch (e) {}
+
+const currentPath = Astro.url.pathname;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <title>{title === 'the letter' ? title : `${title} — the letter`}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-name" href="/">the letter</a>
+      <ul class="nav-links">
+        <li><a href="/" class={currentPath === '/' ? 'active' : ''}>// chronicles</a></li>
+        <li><a href="/amnesiac" class={currentPath === '/amnesiac' ? 'active' : ''}>// amnesiac</a></li>
+        <li><a href="/mythology" class={currentPath === '/mythology' ? 'active' : ''}>// mythology</a></li>
+        <li><a href="/about" class={currentPath === '/about' ? 'active' : ''}>// about</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <main>
+    <slot />
+  </main>
+
+  <!-- Fixed cycle badge -->
+  <div class="cycle-counter">cycle <span>{cycleNumber}</span> / running</div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <span>the letter — a generative mythology</span>
+      <span>running since 2025</span>
+    </div>
+  </footer>
+
+</body>
+</html>
+
+<style>
+  /* ── Navigation ── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    background: rgba(9, 9, 15, 0.9);
+  }
+
+  .nav-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-name {
+    color: var(--violet);
+    font-weight: 500;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    transition: opacity 0.15s;
+  }
+  .nav-name:hover { opacity: 0.75; }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    transition: color 0.15s;
+  }
+  .nav-links a:hover,
+  .nav-links a.active { color: var(--text-bright); }
+
+  /* ── Main wrapper ── */
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ── Cycle counter ── */
+  .cycle-counter {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.85rem;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    pointer-events: none;
+  }
+  .cycle-counter span { color: var(--violet); }
+
+  /* ── Footer ── */
+  footer {
+    margin-top: 4rem;
+    border-top: 1px solid var(--border-soft);
+  }
+  .footer-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 2rem;
+    color: var(--text-dimmer);
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>

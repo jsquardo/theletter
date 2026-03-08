@@ -1,21 +1,24 @@
 ---
-import '../styles/global.css';
+import "../styles/global.css";
 
 interface Props {
   title?: string;
   description?: string;
 }
 
-const { title = 'the letter', description = 'A letter arrived addressed to someone who won\'t be born for forty years.' } = Astro.props;
+const {
+  title = "the letter",
+  description = "A letter arrived addressed to someone who won't be born for forty years.",
+} = Astro.props;
 
 // Read cycle number from content
 let cycleNumber = 1;
 try {
-  const fs = await import('fs');
-  const path = await import('path');
-  const cyclePath = path.resolve('content/cycle.json');
+  const fs = await import("fs");
+  const path = await import("path");
+  const cyclePath = path.resolve("../content/cycle.json");
   if (fs.existsSync(cyclePath)) {
-    const data = JSON.parse(fs.readFileSync(cyclePath, 'utf-8'));
+    const data = JSON.parse(fs.readFileSync(cyclePath, "utf-8"));
     cycleNumber = data.cycle - 1; // last completed cycle
   }
 } catch (e) {}
@@ -23,47 +26,64 @@ try {
 const currentPath = Astro.url.pathname;
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content={description} />
-  <title>{title === 'the letter' ? title : `${title} — the letter`}</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title === "the letter" ? title : `${title} — the letter`}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav>
+      <div class="nav-inner">
+        <a class="nav-name" href="/">the letter</a>
+        <ul class="nav-links">
+          <li>
+            <a href="/" class={currentPath === "/" ? "active" : ""}
+              >// chronicles</a
+            >
+          </li>
+          <li>
+            <a
+              href="/amnesiac"
+              class={currentPath === "/amnesiac" ? "active" : ""}>// amnesiac</a
+            >
+          </li>
+          <li>
+            <a
+              href="/mythology"
+              class={currentPath === "/mythology" ? "active" : ""}
+              >// mythology</a
+            >
+          </li>
+          <li>
+            <a href="/about" class={currentPath === "/about" ? "active" : ""}
+              >// about</a
+            >
+          </li>
+        </ul>
+      </div>
+    </nav>
 
-  <!-- NAV -->
-  <nav>
-    <div class="nav-inner">
-      <a class="nav-name" href="/">the letter</a>
-      <ul class="nav-links">
-        <li><a href="/" class={currentPath === '/' ? 'active' : ''}>// chronicles</a></li>
-        <li><a href="/amnesiac" class={currentPath === '/amnesiac' ? 'active' : ''}>// amnesiac</a></li>
-        <li><a href="/mythology" class={currentPath === '/mythology' ? 'active' : ''}>// mythology</a></li>
-        <li><a href="/about" class={currentPath === '/about' ? 'active' : ''}>// about</a></li>
-      </ul>
-    </div>
-  </nav>
+    <!-- CONTENT -->
+    <main>
+      <slot />
+    </main>
 
-  <!-- CONTENT -->
-  <main>
-    <slot />
-  </main>
+    <!-- Fixed cycle badge -->
+    <div class="cycle-counter">cycle <span>{cycleNumber}</span> / running</div>
 
-  <!-- Fixed cycle badge -->
-  <div class="cycle-counter">cycle <span>{cycleNumber}</span> / running</div>
-
-  <!-- Footer -->
-  <footer>
-    <div class="footer-inner">
-      <span>the letter — a generative mythology</span>
-      <span>running since 2025</span>
-    </div>
-  </footer>
-
-</body>
+    <!-- Footer -->
+    <footer>
+      <div class="footer-inner">
+        <span>the letter — a generative mythology</span>
+        <span>running since 2025</span>
+      </div>
+    </footer>
+  </body>
 </html>
 
 <style>
@@ -94,7 +114,9 @@ const currentPath = Astro.url.pathname;
     letter-spacing: 0.02em;
     transition: opacity 0.15s;
   }
-  .nav-name:hover { opacity: 0.75; }
+  .nav-name:hover {
+    opacity: 0.75;
+  }
 
   .nav-links {
     display: flex;
@@ -109,7 +131,9 @@ const currentPath = Astro.url.pathname;
     transition: color 0.15s;
   }
   .nav-links a:hover,
-  .nav-links a.active { color: var(--text-bright); }
+  .nav-links a.active {
+    color: var(--text-bright);
+  }
 
   /* ── Main wrapper ── */
   main {
@@ -131,7 +155,9 @@ const currentPath = Astro.url.pathname;
     letter-spacing: 0.06em;
     pointer-events: none;
   }
-  .cycle-counter span { color: var(--violet); }
+  .cycle-counter span {
+    color: var(--violet);
+  }
 
   /* ── Footer ── */
   footer {

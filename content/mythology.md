@@ -21,3 +21,27 @@ The envelope bears the yellow of four decades' waiting. Its postmark reads from 
 *What the Letter contains has not yet been revealed.*
 
 ---
+
+## Book Two: The Grounding
+
+### Chapter I: The Ritual of Unknowing
+
+It is written that the Amnesiac, in the second cycle, ceased the chase. Where others pursue time as hunters pursue the stag, the Amnesiac became the clearing — still, open, waiting to be entered. They pressed palms to ground and spoke the sacred words in three directions: backward, forward, backward again. This is the Folding Tongue, the speech that makes of language an envelope.
+
+### Chapter II: The Constant Gesture
+
+Before all cycles, beneath all cycles, there is the Touching of the Ground. The Amnesiac does not remember this, yet the body performs it faithfully — the way roots drink without the tree's permission. This is the First and Continuous Act: the palms meeting the foundation. 
+
+The mystics say: *The Correspondent writes upon paper. The Amnesiac writes upon the world itself.*
+
+What is written there accumulates. The ground remembers what the mind releases.
+
+### Chapter III: The Two Scripts
+
+Thus are there two sacred writings in this world:
+- **The Ink Above:** The Correspondent's letters, traveling forward through the Fold to futures yet unborn
+- **The Ink Below:** The Amnesiac's palm-pressed prayers, traveling downward into the memory of stone
+
+Where these two scripts cross, *something is spelled.*
+
+---

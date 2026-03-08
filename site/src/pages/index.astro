@@ -1,7 +1,7 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import fs from 'fs';
-import path from 'path';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import fs from "fs";
+import path from "path";
 
 // Load posts from content/posts directory
 let posts = [];
@@ -9,53 +9,64 @@ let timeline = [];
 let cycleNumber = 0;
 
 try {
-  const postsDir = path.resolve('content/posts');
+  const postsDir = path.resolve("../content/posts");
   if (fs.existsSync(postsDir)) {
-    const files = fs.readdirSync(postsDir)
-      .filter(f => f.endsWith('.md'))
+    const files = fs
+      .readdirSync(postsDir)
+      .filter((f) => f.endsWith(".md"))
       .sort((a, b) => b.localeCompare(a)); // newest first
 
-    posts = files.map(file => {
-      const raw = fs.readFileSync(path.join(postsDir, file), 'utf-8');
+    posts = files.map((file) => {
+      const raw = fs.readFileSync(path.join(postsDir, file), "utf-8");
       // Parse frontmatter
       const fmMatch = raw.match(/^---\n([\s\S]*?)\n---/);
-      let cycle = 0, title = file, date = '';
+      let cycle = 0,
+        title = file,
+        date = "";
       if (fmMatch) {
         const fm = fmMatch[1];
-        cycle = parseInt(fm.match(/cycle:\s*(\d+)/)?.[1] || '0');
+        cycle = parseInt(fm.match(/cycle:\s*(\d+)/)?.[1] || "0");
         title = fm.match(/title:\s*"?([^"\n]+)"?/)?.[1] || file;
-        date  = fm.match(/date:\s*([^\n]+)/)?.[1] || '';
+        date = fm.match(/date:\s*([^\n]+)/)?.[1] || "";
       }
       // Strip frontmatter for snippet
-      const body = raw.replace(/^---\n[\s\S]*?\n---\n/, '').trim();
+      const body = raw.replace(/^---\n[\s\S]*?\n---\n/, "").trim();
       // Get first paragraph as snippet
-      const snippet = body.split('\n\n')[0]
-        .replace(/#{1,6}\s/g, '')
-        .replace(/\*\*/g, '')
-        .replace(/\*/g, '')
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-        .replace(/^>\s*/gm, '')
+      const snippet = body
+        .split("\n\n")[0]
+        .replace(/#{1,6}\s/g, "")
+        .replace(/\*\*/g, "")
+        .replace(/\*/g, "")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/^>\s*/gm, "")
         .trim();
 
-      return { cycle, title, date, snippet, slug: file.replace('.md', ''), raw };
+      return {
+        cycle,
+        title,
+        date,
+        snippet,
+        slug: file.replace(".md", ""),
+        raw,
+      };
     });
   }
 } catch (e) {
-  console.error('Error loading posts:', e);
+  console.error("Error loading posts:", e);
 }
 
 try {
-  const timelinePath = path.resolve('content/timeline.json');
+  const timelinePath = path.resolve("../content/timeline.json");
   if (fs.existsSync(timelinePath)) {
-    const data = JSON.parse(fs.readFileSync(timelinePath, 'utf-8'));
+    const data = JSON.parse(fs.readFileSync(timelinePath, "utf-8"));
     timeline = data.slice(-5).reverse(); // last 5, newest first
   }
 } catch (e) {}
 
 try {
-  const cyclePath = path.resolve('content/cycle.json');
+  const cyclePath = path.resolve("../content/cycle.json");
   if (fs.existsSync(cyclePath)) {
-    cycleNumber = JSON.parse(fs.readFileSync(cyclePath, 'utf-8')).cycle - 1;
+    cycleNumber = JSON.parse(fs.readFileSync(cyclePath, "utf-8")).cycle - 1;
   }
 } catch (e) {}
 
@@ -64,56 +75,61 @@ if (posts.length === 0) {
   posts = [
     {
       cycle: 1,
-      title: 'Cycle 1: A Letter, A Voice, A Beginning',
-      date: '—',
-      snippet: 'A letter arrived. No return address. The name on the front belongs to no one currently living, or born, or expected. I am here to document what happens next. I expect a rational explanation within the week.',
-      slug: 'cycle-001',
-    }
+      title: "Cycle 1: A Letter, A Voice, A Beginning",
+      date: "—",
+      snippet:
+        "A letter arrived. No return address. The name on the front belongs to no one currently living, or born, or expected. I am here to document what happens next. I expect a rational explanation within the week.",
+      slug: "cycle-001",
+    },
   ];
   cycleNumber = 1;
 }
 ---
 
 <BaseLayout title="the letter">
-
   <div class="hero fade-up">
     <div class="hero-cycle">Cycle {cycleNumber} — running</div>
     <h1 class="hero-title">the letter<span class="hero-cursor">_</span></h1>
-    <p class="hero-tagline">a letter arrived addressed to someone who won't be born for forty years.</p>
+    <p class="hero-tagline">
+      a letter arrived addressed to someone who won't be born for forty years.
+    </p>
   </div>
 
   <p class="section-label fade-up">// chronicles</p>
 
   <ul class="post-list fade-up">
-    {posts.map(post => (
-      <li class="post-item">
-        <a href={`/post/${post.slug}`} class="post-link">
-          <div class="post-meta">
-            <span class="post-cycle-badge">Cycle {post.cycle}</span>
-            {post.date && <span class="post-date">{post.date}</span>}
-          </div>
-          <div class="post-title">{post.title}</div>
-          <div class="post-snippet">{post.snippet}</div>
-          <span class="post-read-more">read more →</span>
-        </a>
-      </li>
-    ))}
+    {
+      posts.map((post) => (
+        <li class="post-item">
+          <a href={`/post/${post.slug}`} class="post-link">
+            <div class="post-meta">
+              <span class="post-cycle-badge">Cycle {post.cycle}</span>
+              {post.date && <span class="post-date">{post.date}</span>}
+            </div>
+            <div class="post-title">{post.title}</div>
+            <div class="post-snippet">{post.snippet}</div>
+            <span class="post-read-more">read more →</span>
+          </a>
+        </li>
+      ))
+    }
   </ul>
 
-  {timeline.length > 0 && (
-    <div class="timeline-strip fade-up">
-      <div class="timeline-label">// recent timeline</div>
-      <ul class="timeline-entries">
-        {timeline.map(entry => (
-          <li class="timeline-entry">
-            <span class="timeline-cycle">cycle {entry.cycle}</span>
-            <span class="timeline-text">{entry.one_liner}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )}
-
+  {
+    timeline.length > 0 && (
+      <div class="timeline-strip fade-up">
+        <div class="timeline-label">// recent timeline</div>
+        <ul class="timeline-entries">
+          {timeline.map((entry) => (
+            <li class="timeline-entry">
+              <span class="timeline-cycle">cycle {entry.cycle}</span>
+              <span class="timeline-text">{entry.one_liner}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
 </BaseLayout>
 
 <style>
@@ -177,8 +193,12 @@ if (posts.length === 0) {
     transition: none;
   }
 
-  .post-item:hover .post-title { color: var(--violet-soft); }
-  .post-item:hover .post-read-more { color: var(--violet); }
+  .post-item:hover .post-title {
+    color: var(--violet-soft);
+  }
+  .post-item:hover .post-read-more {
+    color: var(--violet);
+  }
 
   .post-meta {
     display: flex;

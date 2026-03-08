@@ -10,10 +10,7 @@ from config import CYCLE_INTERVAL_HOURS, SEED_EVENT
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("../content/engine.log")
-    ]
+    handlers=[logging.StreamHandler(), logging.FileHandler("../content/engine.log")],
 )
 logger = logging.getLogger(__name__)
 
@@ -21,16 +18,18 @@ logger = logging.getLogger(__name__)
 def run_cycle():
     state.ensure_content_dirs()
     cycle = state.get_cycle_number()
-    logger.info(f"=== CYCLE {cycle} STARTING at {datetime.now(timezone.utc).isoformat()} ===")
+    logger.info(
+        f"=== CYCLE {cycle} STARTING at {datetime.now(timezone.utc).isoformat()} ==="
+    )
 
     # --- Load current state ---
-    mythology       = state.get_mythology()
-    last_message    = state.get_last_amnesiac_message()
-    message_chain   = state.get_messages()
-    last_post       = state.get_last_chronicler_post()
+    mythology = state.get_mythology()
+    last_message = state.get_last_amnesiac_message()
+    message_chain = state.get_messages()
+    last_post = state.get_last_chronicler_post()
     last_prediction = state.get_last_prediction()
 
-    logger.info(f"Amnesiac wakes with message: \"{last_message}\"")
+    logger.info(f'Amnesiac wakes with message: "{last_message}"')
 
     # --- Step 1: Amnesiac wakes and acts ---
     amnesiac_p1 = agents.run_amnesiac_part1(cycle, last_message)
@@ -39,21 +38,15 @@ def run_cycle():
 
     # --- Step 2: Myth Maker observes and responds ---
     myth_result = agents.run_myth_maker(
-        cycle,
-        mythology,
-        amnesiac_p1["action"],
-        amnesiac_p1["question"]
+        cycle, mythology, amnesiac_p1["action"], amnesiac_p1["question"]
     )
     logger.info(f"Myth Maker answer: {myth_result['answer'][:100]}...")
 
     # --- Step 3: Amnesiac writes its farewell message ---
     new_message = agents.run_amnesiac_part2(
-        cycle,
-        last_message,
-        amnesiac_p1["action"],
-        myth_result["answer"]
+        cycle, last_message, amnesiac_p1["action"], myth_result["answer"]
     )
-    logger.info(f"Amnesiac's message to next self: \"{new_message}\"")
+    logger.info(f'Amnesiac\'s message to next self: "{new_message}"')
 
     # --- Step 4: Save updated state ---
     state.save_mythology(myth_result["mythology"])
@@ -70,7 +63,7 @@ def run_cycle():
         mythology=myth_result["mythology"],
         message_chain=state.get_messages(),
         last_post=last_post,
-        last_prediction=last_prediction
+        last_prediction=last_prediction,
     )
 
     state.save_chronicler_post(cycle, chronicle["post"])
@@ -80,7 +73,11 @@ def run_cycle():
     logger.info(f"One-liner: {chronicle['one_liner']}")
     logger.info(f"Prediction: {chronicle['prediction']}")
 
-    # --- Step 6: Publish ---
+    # --- Step 6: Commit content to git ---
+    publisher.commit_content(cycle)
+    publisher.push_to_remote()  # optional — remove if no remote configured
+
+    # --- Step 7: Rebuild site ---
     publisher.rebuild_astro_site()
 
     # --- Step 7: Advance cycle ---
@@ -90,7 +87,7 @@ def run_cycle():
 
 def main():
     logger.info("Engine starting up...")
-    logger.info(f"Seed event: \"{SEED_EVENT}\"")
+    logger.info(f'Seed event: "{SEED_EVENT}"')
     logger.info(f"Cycle interval: {CYCLE_INTERVAL_HOURS} hours")
 
     while True:

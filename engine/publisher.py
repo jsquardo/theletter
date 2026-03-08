@@ -1,45 +1,73 @@
 import subprocess
 import logging
+import os
 from config import BASE_DIR
 
 logger = logging.getLogger(__name__)
 
+REPO_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
+SITE_DIR = os.path.join(REPO_ROOT, "site")
 
-def trigger_site_rebuild():
+
+def commit_content(cycle: int):
     """
-    Commits and pushes new content to git, which triggers a site rebuild.
-    On DigitalOcean you can set this up as a git post-receive hook or
-    a simple deploy script that Nginx serves after Astro builds.
+    Stages all content/ changes and commits them with a cycle-stamped message.
+    This gives you a full git history of every cycle's output.
     """
     try:
-        repo_root = BASE_DIR + "/.."
-        subprocess.run(["git", "add", "content/"], cwd=repo_root, check=True)
+        # Stage everything in content/
         subprocess.run(
-            ["git", "commit", "-m", "chore: new cycle content"],
-            cwd=repo_root, check=True
+            ["git", "add", "content/"], cwd=REPO_ROOT, check=True, capture_output=True
         )
-        subprocess.run(["git", "push"], cwd=repo_root, check=True)
-        logger.info("Content committed and pushed.")
+
+        # Check if there's actually anything to commit
+        result = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=REPO_ROOT)
+
+        if result.returncode == 0:
+            logger.info(f"Cycle {cycle}: nothing new to commit in content/.")
+            return
+
+        subprocess.run(
+            ["git", "commit", "-m", f"cycle {cycle}: mythology, messages, post"],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+        )
+        logger.info(f"Cycle {cycle}: content committed to git.")
+
     except subprocess.CalledProcessError as e:
-        logger.warning(f"Git push failed (may be nothing to commit): {e}")
+        logger.warning(f"Git commit failed: {e}")
+
+
+def push_to_remote():
+    """
+    Pushes committed content to the remote (optional).
+    Useful if you want the git history mirrored to GitHub as a backup.
+    Safe to skip if you only care about local history on the VPS.
+    """
+    try:
+        subprocess.run(
+            ["git", "push"], cwd=REPO_ROOT, check=True, capture_output=True, timeout=30
+        )
+        logger.info("Pushed to remote.")
+    except subprocess.CalledProcessError as e:
+        logger.warning(f"Git push failed (remote may not be configured): {e}")
+    except subprocess.TimeoutExpired:
+        logger.warning("Git push timed out — skipping.")
 
 
 def rebuild_astro_site():
     """
     Triggers an Astro build on the VPS.
-    This runs `npm run build` inside the /site directory,
-    then Nginx serves the dist/ folder.
-    Call this after pushing content if you're doing local builds.
+    Nginx serves the resulting dist/ folder.
     """
-    import os
-    site_dir = os.path.join(BASE_DIR, "../site")
     try:
         result = subprocess.run(
             ["npm", "run", "build"],
-            cwd=site_dir,
+            cwd=SITE_DIR,
             capture_output=True,
             text=True,
-            timeout=120
+            timeout=120,
         )
         if result.returncode == 0:
             logger.info("Astro site rebuilt successfully.")

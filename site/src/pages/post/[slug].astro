@@ -1,37 +1,41 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import fs from 'fs';
-import path from 'path';
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import fs from "fs";
+import path from "path";
 
 export async function getStaticPaths() {
-  const postsDir = path.resolve('content/posts');
+  const postsDir = path.resolve("../content/posts");
   if (!fs.existsSync(postsDir)) return [];
 
-  const files = fs.readdirSync(postsDir).filter(f => f.endsWith('.md'));
-  return files.map(file => ({
-    params: { slug: file.replace('.md', '') }
+  const files = fs.readdirSync(postsDir).filter((f) => f.endsWith(".md"));
+  return files.map((file) => ({
+    params: { slug: file.replace(".md", "") },
   }));
 }
 
 const { slug } = Astro.params;
-const postPath = path.resolve(`content/posts/${slug}.md`);
+const postPath = path.resolve(`../content/posts/${slug}.md`);
 
-let cycle = 0, title = 'Post', date = '', body = '', amnMessage = '';
+let cycle = 0,
+  title = "Post",
+  date = "",
+  body = "",
+  amnMessage = "";
 
 if (fs.existsSync(postPath)) {
-  const raw = fs.readFileSync(postPath, 'utf-8');
+  const raw = fs.readFileSync(postPath, "utf-8");
   const fmMatch = raw.match(/^---\n([\s\S]*?)\n---/);
   if (fmMatch) {
     const fm = fmMatch[1];
-    cycle = parseInt(fm.match(/cycle:\s*(\d+)/)?.[1] || '0');
+    cycle = parseInt(fm.match(/cycle:\s*(\d+)/)?.[1] || "0");
     title = fm.match(/title:\s*"?([^"\n]+)"?/)?.[1] || slug;
-    date  = fm.match(/date:\s*([^\n]+)/)?.[1] || '';
+    date = fm.match(/date:\s*([^\n]+)/)?.[1] || "";
   }
 
-  body = raw.replace(/^---\n[\s\S]*?\n---\n/, '').trim();
+  body = raw.replace(/^---\n[\s\S]*?\n---\n/, "").trim();
 
   // Extract amnesiac quote if present (after the --- divider)
-  const dividerIndex = body.lastIndexOf('\n---\n');
+  const dividerIndex = body.lastIndexOf("\n---\n");
   if (dividerIndex !== -1) {
     const quoteSection = body.slice(dividerIndex);
     const quoteMatch = quoteSection.match(/>\s*"([^"]+)"/);
@@ -43,17 +47,17 @@ if (fs.existsSync(postPath)) {
 // Simple markdown to HTML conversion
 function mdToHtml(md: string): string {
   return md
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-    .split('\n\n')
-    .map(p => p.trim())
-    .filter(p => p && !p.startsWith('<h') && !p.startsWith('<block'))
-    .map(p => p.startsWith('<') ? p : `<p>${p.replace(/\n/g, ' ')}</p>`)
-    .join('\n');
+    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>")
+    .split("\n\n")
+    .map((p) => p.trim())
+    .filter((p) => p && !p.startsWith("<h") && !p.startsWith("<block"))
+    .map((p) => (p.startsWith("<") ? p : `<p>${p.replace(/\n/g, " ")}</p>`))
+    .join("\n");
 }
 
 const htmlBody = mdToHtml(body);
@@ -61,7 +65,6 @@ const htmlBody = mdToHtml(body);
 
 <BaseLayout title={title}>
   <div class="article-wrap">
-
     <a href="/" class="article-back fade-up">← chronicles</a>
 
     <div class="article-header fade-up">
@@ -72,13 +75,16 @@ const htmlBody = mdToHtml(body);
 
     <div class="article-body fade-up" set:html={htmlBody} />
 
-    {amnMessage && (
-      <div class="article-amnesiac-quote fade-up">
-        <div class="article-amnesiac-label">// the amnesiac's message to its next self — cycle {cycle}</div>
-        <div class="article-amnesiac-text">"{amnMessage}"</div>
-      </div>
-    )}
-
+    {
+      amnMessage && (
+        <div class="article-amnesiac-quote fade-up">
+          <div class="article-amnesiac-label">
+            // the amnesiac's message to its next self — cycle {cycle}
+          </div>
+          <div class="article-amnesiac-text">"{amnMessage}"</div>
+        </div>
+      )
+    }
   </div>
 </BaseLayout>
 
@@ -95,7 +101,9 @@ const htmlBody = mdToHtml(body);
     letter-spacing: 0.04em;
     transition: color 0.15s;
   }
-  .article-back:hover { color: var(--violet); }
+  .article-back:hover {
+    color: var(--violet);
+  }
 
   .article-header {
     padding: 1.5rem 0 2.5rem;

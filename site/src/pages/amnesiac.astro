@@ -6,7 +6,7 @@ import path from "path";
 let messages = [];
 
 try {
-  const messagesPath = path.resolve("content/messages.json");
+  const messagesPath = path.resolve("../content/messages.json");
   if (fs.existsSync(messagesPath)) {
     messages = JSON.parse(fs.readFileSync(messagesPath, "utf-8")).reverse(); // newest first
   }
